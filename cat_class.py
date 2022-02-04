@@ -18,8 +18,9 @@
 
 
 ############ Includes ##################
+from ast import Num
 from datetime import date
-from os import stat       # Import date class from datetime module
+from os import stat             # Import date class from datetime module
 from statistics import stdev    # Import statistics to utilize mean, standard deviation, and variance calculations
 from statistics import variance
 from statistics import mean
@@ -39,6 +40,7 @@ class cat:
         self.avg=0                #Initialize the average to be 0
         self.standardDev=0        #Initialize the standard deviation to be 0
         self.trialVariance=0      #Initialize the variance to be 0
+        self.numOfTrials=0
     
     #############################
     #Class Functions:
@@ -68,6 +70,7 @@ class cat:
     #Method for inserting a new withdrawl time into the list
     def insertTime(self,new_time):
         self.time.append(new_time)
+        self.numOfTrials+=1
 
 
     #Method for performing a trial and saving the data
@@ -130,10 +133,6 @@ class cat:
     #Method for printing withdrawal times stored within list 
     def printTime(self):
         trialNum=1
-        #Update the analysis
-        self.avg=self.getAvg()
-        self.standardDev=self.getStdev()
-        self.trialVariance=self.getVar()
 
         #Print the Cat's information and date
         print("\nCat:",self.name,"\tTest Date:",self.date)
@@ -142,11 +141,32 @@ class cat:
         for i in self.time:
             print("Trial",trialNum,":","%s seconds" % i)
             trialNum+=1
-        #Print the cat's average time
+        #Print the cat's average time, standard deviation, variance
         print("\nAnalysis")
+
+        if self.numOfTrials>1:
+            #Update the analysis
+            self.avg=self.getAvg()
+            self.standardDev=self.getStdev()
+            self.trialVariance=self.getVar()
+        else:
+            #If there is only 1 trial, dont update analysis
+            self.avg=0
+            self.standardDev=0
+            self.trialVariance=0
+            print("***Not enough trial data to perform analysis***")
+
         print("Average:", self.avg)
         print("Variance:", self.trialVariance)
         print("Standard Deviation:", self.standardDev)
+        return 
+
+    #def printAllCats(testCats):
+     #   for i in testCats:
+
+      #      curr_cat=cat(testCats[i])
+       #     curr_cat.printTime()
+        #return
     
     ###############################################################################
     #     This method is what starts the entire system to even run a test         #
@@ -158,11 +178,12 @@ class cat:
         beginProgram=input("Would you like to run a trial? (Yes/No): ")
         print(beginProgram)
         
+        testCats=[]
         #Determine valid response, if so create a cat as an object
         while beginProgram == "y":
             #Create a cat with their information
             name=input("Enter subject's name: ")
-            cat1=cat(name)
+            curr_cat=cat(name)
             #Begin Testing a cat
             trialNum=1 #Keeps track of trial of current cat
             runTrial=1 #Flag to determine which cat is being tested on
@@ -170,7 +191,7 @@ class cat:
             while (runTrial==1):
                 #Perform a Trial, get withdrawal time
                 print("Trial ",trialNum,":")
-                cat1.trial()
+                curr_cat.trial()
 
                 #Prompt to perform another trial
                 nextTrial=input("Run another trial for this cat?(Yes/No) ")
@@ -181,15 +202,22 @@ class cat:
                     trialNum=0
                     runTrial=0
         #Print cat's information after testing 
-            cat1.printTime()
+            curr_cat.printTime()
         
             #Ask user to test another cat
             testAnotherCat=input("\nTest a new Cat?(Yes/No)")
-            if testAnotherCat == "y": beginProgram="y" #Jump back to start of loop and create new cat
-            if testAnotherCat == "n": beginProgram="n" #Exit loop
+            if testAnotherCat == "y": 
+                testCats.append(curr_cat)
+                beginProgram="y" #Jump back to start of loop and create new cat
+            if testAnotherCat == "n": 
+                testCats.append(curr_cat)
+                beginProgram="n" #Exit loop
                         
         #Exit program when testing is stopped
-        if beginProgram == "n": print("*****Ending Testing*****")
+        if beginProgram == "n": 
+            #cat.printAllCats(testCats)
+            print("*****Ending Testing*****")
+
         return
         #########################################################
 

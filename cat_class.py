@@ -12,13 +12,12 @@
 ##  times, as well as performs analysis such as standard dev, average, and variance calculations
 ##
 ## Usage:
-##  Running: (run it here, eventually build a make file-Rob)
+##  Running: python3 cat_class.py (run it here, eventually build a make file-Rob)
 ##
 ########################################
 
 
 ############ Includes ##################
-from ast import Num
 from datetime import date
 from os import stat             # Import date class from datetime module
 from statistics import stdev    # Import statistics to utilize mean, standard deviation, and variance calculations
@@ -41,6 +40,7 @@ class cat:
         self.standardDev=0        #Initialize the standard deviation to be 0
         self.trialVariance=0      #Initialize the variance to be 0
         self.numOfTrials=0
+        return
     
     #############################
     #Class Functions:
@@ -71,6 +71,7 @@ class cat:
     def insertTime(self,new_time):
         self.time.append(new_time)
         self.numOfTrials+=1
+        return
 
 
     #Method for performing a trial and saving the data
@@ -135,7 +136,7 @@ class cat:
         trialNum=1
 
         #Print the Cat's information and date
-        print("\nCat:",self.name,"\tTest Date:",self.date)
+        print("Cat's Name:",self.name,"\tTest Date:",self.date)
         print("--------------------------------------")
         #Print the times for each trial
         for i in self.time:
@@ -160,25 +161,39 @@ class cat:
         print("Variance:", self.trialVariance)
         print("Standard Deviation:", self.standardDev)
         return 
-
-    #def printAllCats(testCats):
-     #   for i in testCats:
-
-      #      curr_cat=cat(testCats[i])
-       #     curr_cat.printTime()
-        #return
     
+
+#################################################################
+# Create a class to store all the cats information as lists
+#####################################################################
+class testCats:
+    def __init__(self) -> None:
+        pass
+
+    def printResults(self, saveCats):
+        print("--------------------------------------")
+        print("Test Results:")
+        print("--------------------------------------")
+        numOfCat=1
+        #Print every cat's information
+        for i in saveCats:
+            print("\nCat:",numOfCat)
+            i.printTime() 
+            numOfCat+=1
+        
+        return
+
     ###############################################################################
     #     This method is what starts the entire system to even run a test         #
     #     Think of it like main, it is a driver function                          #
-    ###############################################################################
-    def start_testing():
-        #Prompt user to start program
+    ###############################################################################    
+    def startExperiment(self):
+       #Prompt user to start program
         print("\n*******Welcome to the Plantar Thermal Laser test.*******")
         beginProgram=input("Would you like to run a trial? (Yes/No): ")
         print(beginProgram)
-        
-        testCats=[]
+        saveCats=[]  #Create a list to store all cat's information
+
         #Determine valid response, if so create a cat as an object
         while beginProgram == "y":
             #Create a cat with their information
@@ -207,24 +222,25 @@ class cat:
             #Ask user to test another cat
             testAnotherCat=input("\nTest a new Cat?(Yes/No)")
             if testAnotherCat == "y": 
-                testCats.append(curr_cat)
+                saveCats.append(curr_cat)
                 beginProgram="y" #Jump back to start of loop and create new cat
             if testAnotherCat == "n": 
-                testCats.append(curr_cat)
+                saveCats.append(curr_cat)
+                self.printResults(saveCats)
                 beginProgram="n" #Exit loop
                         
         #Exit program when testing is stopped
-        if beginProgram == "n": 
-            #cat.printAllCats(testCats)
+        if beginProgram == "n":     
             print("*****Ending Testing*****")
-
         return
-        #########################################################
 
-################Driver Function#########################
+#########################################
+#           Driver Function             #
+#########################################
 def main():
-    #call the driver to begin the testing
-    cat.start_testing()
+    #create a test and start the experiment
+    test=testCats()
+    test.startExperiment() 
 
     #exit program
     return 0

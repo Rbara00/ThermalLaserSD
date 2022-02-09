@@ -159,7 +159,7 @@ class cat:
 
         print("Average:", self.avg)
         print("Variance:", self.trialVariance)
-        print("Standard Deviation:", self.standardDev)
+        print("Standard Deviation:", self.standardDev,"\n")
         return 
     
 
@@ -171,15 +171,12 @@ class testCats:
         pass
 
     def printResults(self, saveCats):
-        print("--------------------------------------")
+        print("\n--------------------------------------")
         print("Test Results:")
-        print("--------------------------------------")
-        numOfCat=1
+        print("--------------------------------------\n")
         #Print every cat's information
         for i in saveCats:
-            print("\nCat:",numOfCat)
             i.printTime() 
-            numOfCat+=1
         
         return
 

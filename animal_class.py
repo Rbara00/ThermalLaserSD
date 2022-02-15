@@ -4,7 +4,7 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Date:    2/3/2022
-## Version: 1.3
+## Version: 2.1
 ##
 ## Description:
 ##  This python program allows for the thermal laser plantar test to run by prompting the user if
@@ -61,6 +61,7 @@ class animal:
     #Getter for the animal's number of trials completed
     def getNumOfTrials(self):
         return self.numOfTrials
+        
     #Getter for the average withdrawal time
     def getAvg(self):
         sample=self.time
@@ -103,6 +104,16 @@ class animal:
         else:        
             #When a valid trial is ran, 
             self.insertTime(t_1) #place withdrawal time into list
+            if self.numOfTrials>1:
+            #Update the analysis
+                self.avg=self.getAvg()
+                self.standardDev=self.getStdev()
+                self.trialVariance=self.getVar()
+            else:
+                #If there is only 1 trial, dont update analysis
+                self.avg=0
+                self.standardDev=0
+                self.trialVariance=0
 
         return
         
@@ -161,21 +172,17 @@ class animal:
         #Print the animal's average time, standard deviation, variance
         print("\nAnalysis")
 
-        if self.numOfTrials>1:
-            #Update the analysis
-            self.avg=self.getAvg()
-            self.standardDev=self.getStdev()
-            self.trialVariance=self.getVar()
-        else:
+        if self.numOfTrials<=1:
             #If there is only 1 trial, dont update analysis
             self.avg=0
             self.standardDev=0
             self.trialVariance=0
             print("***Not enough trial data to perform analysis***")
-
-        print("Average:", self.avg)
-        print("Variance:", self.trialVariance)
-        print("Standard Deviation:", self.standardDev,"\n")
+        else:
+            #Otherwise print the animal's analysis
+            print("Average:", self.avg)
+            print("Variance:", self.trialVariance)
+            print("Standard Deviation:", self.standardDev,"\n")
         return 
     
 
@@ -283,11 +290,11 @@ class testAnimals:
                 beginProgram="y" #Jump back to start of loop and create new animal
             if testAnotheranimal == "n": 
                 saveAnimals.append(curr_animal)
-                #self.printTodaysResults(saveAnimals)
+                self.printTodaysResults(saveAnimals)
                 #Testing printing per group
                 #self.printGroup(saveAnimals,0)
                 #self.printGroup(saveAnimals,1)
-                self.printAllGroups(saveAnimals)
+                #self.printAllGroups(saveAnimals)
                 beginProgram="n" #Exit loop
                         
         #Exit program when testing is stopped
@@ -301,8 +308,7 @@ class testAnimals:
 def main():
     #create a test and start the experiment
     test=testAnimals()
-    test.startExperiment() 
-
+    saveAnimals=test.startExperiment() 
     #exit program
     return 0
 

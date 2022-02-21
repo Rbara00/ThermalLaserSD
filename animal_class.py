@@ -19,11 +19,12 @@
 
 ############ Includes ##################
 from datetime import date
+from datetime import datetime
 from os import stat
 from re import S
 from sre_constants import MAXGROUPS             # Import date class from datetime module
-from statistics import stdev    # Import statistics to utilize mean, standard deviation, and variance calculations
-from statistics import variance
+from statistics import pstdev    # Import statistics to utilize mean, standard deviation, and variance calculations
+from statistics import pvariance
 from statistics import mean
 from enum import Enum
 #import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
@@ -39,7 +40,9 @@ class animal:
         self.name=name            #animal is named from user input
         self.time=[]              #create a list of all the animal's withdrawal times
         self.date = date.today()  #stores the corresponding test date
-        self.group=group
+        self.startTime=0 #date.strftime("%H:%M:%S")  #stores the timestamp when testing is starting for cat
+        self.endTestTime=0        #stores the timestamp when testing is over for the cat
+        self.group=group          #stores the cat's group number
         self.avg=0                #Initialize the average to be 0
         self.standardDev=0        #Initialize the standard deviation to be 0
         self.trialVariance=0      #Initialize the variance to be 0
@@ -75,13 +78,13 @@ class animal:
     #Getter for the Standard Deviation of the animal's response times
     def getStdev(self):
         sample=self.time
-        self.standardDev=stdev(sample)
+        self.standardDev=pstdev(sample)
         return self.standardDev
     
     #Getter for the Variance of the animal's response times
     def getVar(self):
         sample=self.time
-        self.trialVariance=variance(sample)
+        self.trialVariance=pvariance(sample)
         return self.trialVariance
 
     #Method for inserting a new withdrawl time into the list
@@ -163,7 +166,7 @@ class animal:
         trialNum=1
 
         #Print the animal's information and date
-        print("Animal's Name:",self.name,"\tGroup:",self.group,"\tTest Date:",self.date)
+        print("Animal's Name:",self.name,"\tGroup:",self.group,"\tTest Date:",self.date,"\t Test Times:",self.startTime,"-",self.endTestTime)
         print("----------------------------------------------------------------------------")
         #Print the times for each trial
         for i in self.time:
@@ -281,6 +284,7 @@ class testAnimals:
                     trialNum=0
                     runTrial=0
         #Print animal's information after testing 
+            #curr_animal.endTestTime=date.strftime("%H:%M:%S")  #get the timestamp when testing is over for cat
             curr_animal.printTime()
         
             #Ask user to test another animal

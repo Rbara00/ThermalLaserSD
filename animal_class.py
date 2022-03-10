@@ -3,8 +3,8 @@
 ## Animal Class for thermal laser
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
-## Date:    2/3/2022
-## Version: 2.1
+## Date:    3/10/2022
+## Version: 2.3
 ##
 ## Description:
 ##  This python program allows for the thermal laser plantar test to run by prompting the user if
@@ -16,10 +16,10 @@
 ##
 ########################################
 
-
 ############ Includes ##################
-from datetime import date
+from datetime import date   
 from datetime import datetime
+import os
 from os import stat
 from re import S
 from sre_constants import MAXGROUPS             # Import date class from datetime module
@@ -28,9 +28,9 @@ from statistics import pvariance
 from statistics import mean
 from enum import Enum
 #import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
-from time import time           # Import time to calculate withdrawal time
-########################################
-
+from time import time
+from numpy import save           # Import time to calculate withdrawal time
+import openpyxl                 # Import for exporting the animal's results to spreadsheets
 ############ animal Class #################
 class animal:
     ##############################
@@ -49,9 +49,10 @@ class animal:
         self.numOfTrials=0
         return
     
-    #############################
-    #Class Functions:
-    #############################
+    ##########################################
+    # Class Functions:
+    # Getter Functions for animal's attributes
+    ##########################################
     #Getter for the animal's name
     def getName(self):
         return self.name
@@ -63,36 +64,34 @@ class animal:
         return self.group
     #Getter for the animal's number of trials completed
     def getNumOfTrials(self):
-        return self.numOfTrials
-        
+        return self.numOfTrials    
     #Getter for the average withdrawal time
     def getAvg(self):
         sample=self.time
         self.avg=mean(sample)
         return self.avg
-    
     #Getter for time at specifed trial
     def getTimeAt(self,index):
         return self.time[index] 
-    
     #Getter for the Standard Deviation of the animal's response times
     def getStdev(self):
         sample=self.time
         self.standardDev=pstdev(sample)
         return self.standardDev
-    
     #Getter for the Variance of the animal's response times
     def getVar(self):
         sample=self.time
         self.trialVariance=pvariance(sample)
         return self.trialVariance
 
+    ###################################################################################
+    # Functions for turning on laser system and inserting withdrawal time into database
+    ###################################################################################
     #Method for inserting a new withdrawl time into the list
     def insertTime(self,new_time):
         self.time.append(new_time)
         self.numOfTrials+=1
         return
-
 
     #Method for performing a trial and saving the data
     def trial(self):
@@ -114,7 +113,7 @@ class animal:
                 self.trialVariance=self.getVar()
             else:
                 #If there is only 1 trial, dont update analysis
-                self.avg=0
+                self.avg=self.getTimeAt(0) #Average is the only valid trial
                 self.standardDev=0
                 self.trialVariance=0
 
@@ -130,8 +129,8 @@ class animal:
         print("\tProgram Started")
         
         #--------------------------------------------------------------
-        #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
-        t_1=input("")
+        
+        t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
         
         print("\tPaw Placed time: %s seconds" % t_1)
         return t_1
@@ -161,28 +160,29 @@ class animal:
         GPIO.cleanup()
         return t_1
 
-    #Method for printing withdrawal times stored within list 
+    # Function for printing withdrawal times stored within list 
     def printTime(self):
-        trialNum=1
-
+        trialNum=1      #Counter for the current Trial
         #Print the animal's information and date
         print("Animal's Name:",self.name,"\tGroup:",self.group,"\tTest Date:",self.date,"\t Test Times:",self.startTime,"-",self.endTestTime)
         print("----------------------------------------------------------------------------")
+        
         #Print the times for each trial
         for i in self.time:
             print("Trial",trialNum,":","%s seconds" % i)
             trialNum+=1
         #Print the animal's average time, standard deviation, variance
         print("\nAnalysis")
-
+        
+        #If there is only 1 trial, dont update analysis
         if self.numOfTrials<=1:
-            #If there is only 1 trial, dont update analysis
-            self.avg=0
-            self.standardDev=0
+            self.avg=self.getTimeAt(0)  #Average will be the only valid trial
+            self.standardDev=0          #Standard Dev and Variance would be 0 due to insufficient trials
             self.trialVariance=0
             print("***Not enough trial data to perform analysis***")
+        #Otherwise if there are multiple valid trials, print analysis
         else:
-            #Otherwise print the animal's analysis
+            #Print the animal's analysis
             print("Average:", self.avg)
             print("Variance:", self.trialVariance)
             print("Standard Deviation:", self.standardDev,"\n")
@@ -193,8 +193,12 @@ class animal:
 # Create a class to run a test and store all the animals information 
 #####################################################################
 class testAnimals:
+    #No need for a constructor
     def __init__(self) -> None:
         pass
+    ############################################################
+    # Functions to Print results in various ways to the terminal
+    ############################################################
     #Print the results of the Passed in Group number
     def printGroup(self, saveAnimals, group):
         print("\n--------------------------------------")
@@ -205,6 +209,7 @@ class testAnimals:
             if(i.group==group): 
                 i.printTime() 
         return
+
     #Prints the results of all groups in orderS
     def printAllGroups(self, saveAnimals):
         numOfGroups=self.maxGroup(saveAnimals)
@@ -227,13 +232,57 @@ class testAnimals:
         #Print every Animal's information
         for i in saveAnimals:
             i.printTime() 
-        
         return
+    #####################################################
+    # Functions for exporting results to spreadsheet
+    #####################################################
+    #This function creates a spreadsheet and labels the proper columns for the animal's data
+    def exportSetup(self):
+        #Create a work book
+        wb1=openpyxl.Workbook()
+        #Create a worksheet within the workbook
+        ws1=wb1.active
+        ws1.title="Group"
+        #initialize all the column names
+        ws1.append(["Group","Number of Groups","Group Avg","Animal Name","Trial Num","Withdrawal Times","Avg Time", "Stdev","Trial Variance"])
+        #prompt for an output file name
+        workbookName=input("Save Output File As .xlsx?")
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        #close the workbook
+        wb1.close
+        return workbookName #return the workbook name so we can write to it with the other export functions
 
-    def exportGroup(self,saveAnimals,group):
-        
+    #This function exports the animals that were tested on the current day, to a spreadsheet
+    def exportResults(self,saveAnimals,saveAnimalsLength):
+        #Call excel setup function
+        workbookName=self.exportSetup()
+        #Load the workbook that has been created
+        wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        #Write Data to the current sheet
+        ws1=wb1.active
+        #Loop through the saved animals
+        for i in range(saveAnimalsLength):
+            #remove the animal at the front of the list 
+            currAnimal=saveAnimals.pop(0)
+            #set the counter for the trial number
+            trialNum=1
+            #Loop through the Current Animal's withdrawal times
+            for j in currAnimal.time:
+                withdrawalTime=j
+                #Print the animal's attributes
+                ws1.append(["n/a","n/a","n/a",currAnimal.getName(), trialNum, withdrawalTime, 
+                            currAnimal.avg, currAnimal.standardDev, currAnimal.trialVariance])       
+                trialNum+=1
+
+        # When exporting is done, save the workbook
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        # Close the workbook and return
+        wb1.close()
         return
     
+    ###############################################################################             
+    #  Functions for starting the test and prompting for an animals information                          
+    ###############################################################################    
     #Prompts the user for name and number to construct animal
     def promptAnimalInfo():
         #Create a animal with their information
@@ -249,13 +298,11 @@ class testAnimals:
             continue
         #Return Current Animal's name and number
         return name,group
-
-    ###############################################################################
-    #     This method is what starts the entire system to even run a test         #
-    #     Think of it like main, it is a driver function                          #
-    ###############################################################################    
+    
+    #This method is what starts the entire system to even run a test
     def startExperiment(self):
         saveAnimals=[]  #Create a list to store all animal's information
+        saveAnimalsLength=0 #Keep track of the size of the list
        #Prompt user to start program
         print("\n*******Welcome to the Plantar Thermal Laser test.*******")
         beginProgram=input("Would you like to run a trial? (Yes/No): ")
@@ -289,22 +336,27 @@ class testAnimals:
         
             #Ask user to test another animal
             testAnotheranimal=input("\nTest a new animal?(Yes/No)")
+            #If the User Answers Yes
             if testAnotheranimal == "y": 
-                saveAnimals.append(curr_animal)
+                saveAnimals.append(curr_animal) #add another animal to the list
+                saveAnimalsLength+=1            #update the length of the list
                 beginProgram="y" #Jump back to start of loop and create new animal
+            #If the User Answers No
             if testAnotheranimal == "n": 
-                saveAnimals.append(curr_animal)
+                saveAnimals.append(curr_animal) #add another animal to the list
+                saveAnimalsLength+=1            #update the length of the list
                 self.printTodaysResults(saveAnimals)
                 #Testing printing per group
                 #self.printGroup(saveAnimals,0)
                 #self.printGroup(saveAnimals,1)
                 #self.printAllGroups(saveAnimals)
+                self.exportResults(saveAnimals,saveAnimalsLength)
                 beginProgram="n" #Exit loop
                         
         #Exit program when testing is stopped
         if beginProgram == "n":     
             print("*****Ending Testing*****")
-        return saveAnimals
+        return
 
 #########################################
 #           Driver Function             #
@@ -312,7 +364,7 @@ class testAnimals:
 def main():
     #create a test and start the experiment
     test=testAnimals()
-    saveAnimals=test.startExperiment() 
+    test.startExperiment()
     #exit program
     return 0
 

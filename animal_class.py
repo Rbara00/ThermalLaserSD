@@ -260,20 +260,52 @@ class testAnimals:
         wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
         #Write Data to the current sheet
         ws1=wb1.active
+        exportAnimals=saveAnimals
         #Loop through the saved animals
         for i in range(saveAnimalsLength):
             #remove the animal at the front of the list 
-            currAnimal=saveAnimals.pop(0)
+            currAnimal=exportAnimals.pop(0)
             #set the counter for the trial number
             trialNum=1
             #Loop through the Current Animal's withdrawal times
             for j in currAnimal.time:
                 withdrawalTime=j
+                group=currAnimal.getGroup()
                 #Print the animal's attributes
-                ws1.append(["n/a","n/a","n/a",currAnimal.getName(), trialNum, withdrawalTime, 
+                ws1.append([group,"n/a","n/a",currAnimal.getName(), trialNum, withdrawalTime, 
                             currAnimal.avg, currAnimal.standardDev, currAnimal.trialVariance])       
                 trialNum+=1
+        # When exporting is done, save the workbook
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        # Close the workbook and return
+        wb1.close()
+        return
 
+    #Function for printing every group in order (Not finished yet)
+    def exportAllGroups(self, saveAnimals):
+        #Call excel setup function
+        workbookName=self.exportSetup()
+        #Load the workbook that has been created
+        wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        #Write Data to the current sheet
+        ws1=wb1.active
+        exportAnimals=saveAnimals
+        #Loop through the saved animals by group
+        numOfGroups=self.maxGroup(exportAnimals)
+        for k in range(numOfGroups+1):
+            for i in exportAnimals:
+                if(i.group==k): 
+                    #remove the animal at the front of the list 
+                    currAnimal=exportAnimals.pop(0)
+                    #set the counter for the trial number
+                    trialNum=1
+                    #Loop through the Current Animal's withdrawal times
+                    for j in currAnimal.time:
+                        withdrawalTime=j
+                        #Print the animal's attributes
+                        ws1.append(["n/a","n/a","n/a",currAnimal.getName(), trialNum, withdrawalTime, 
+                                    currAnimal.avg, currAnimal.standardDev, currAnimal.trialVariance])       
+                        trialNum+=1
         # When exporting is done, save the workbook
         wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
         # Close the workbook and return
@@ -346,11 +378,13 @@ class testAnimals:
                 saveAnimals.append(curr_animal) #add another animal to the list
                 saveAnimalsLength+=1            #update the length of the list
                 self.printTodaysResults(saveAnimals)
+                
                 #Testing printing per group
                 #self.printGroup(saveAnimals,0)
                 #self.printGroup(saveAnimals,1)
                 #self.printAllGroups(saveAnimals)
                 self.exportResults(saveAnimals,saveAnimalsLength)
+                #self.exportAllGroups(saveAnimals)
                 beginProgram="n" #Exit loop
                         
         #Exit program when testing is stopped

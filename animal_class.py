@@ -27,7 +27,7 @@ from statistics import pstdev    # Import statistics to utilize mean, standard d
 from statistics import pvariance
 from statistics import mean
 from enum import Enum
-#import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
+import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
 from time import time
 from numpy import save           # Import time to calculate withdrawal time
 import openpyxl                 # Import for exporting the animal's results to spreadsheets
@@ -95,8 +95,24 @@ class animal:
 
     #Method for performing a trial and saving the data
     def trial(self):
+
+        ############################################################################
+        #Setup GPIO Board for RPI
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(13,GPIO.OUT)
+        GPIO.output(13,GPIO.LOW)
+        ############################################################################
+
         #Run a trial and insert withdrawal time into a list for exporting
         t_1=animal.timer()
+
+        ############################################################################
+        #Clear the GPIO Pins, overide laser to be off
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(13,GPIO.OUT)
+        GPIO.output(13,GPIO.LOW)
+        ############################################################################
+
         t_1=float(t_1) #Ensure the time is a valid time with decimals
         #Was the trial valid enough for the user?
         valid_trial=input("Keep trial? (Yes/No): ")
@@ -121,27 +137,28 @@ class animal:
         
     #Method for recording withdrawal time
     def timer():
-        #GPIO.setmode(GPIO.BOARD)
-        #GPIO.setup(11,GPIO.IN)
-        #GPIO.setup(13,GPIO.OUT)
-        #GPIO.output(13,GPIO.LOW)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
+        GPIO.setup(13,GPIO.OUT) #Output to the Laser
+        GPIO.output(13,GPIO.LOW) #Initialize to off
     
         print("\tProgram Started")
         
         #--------------------------------------------------------------
         
-        t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
+        #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
         
-        print("\tPaw Placed time: %s seconds" % t_1)
-        return t_1
+        #print("\tPaw Placed time: %s seconds" % t_1)
+        #return t_1
         #--------------------------------------------------------------
         
         first_placed=False
+        print("Searching for Paw")
         while first_placed is False:
-            print("Searching for Paw")
+            GPIO.output(13,GPIO.LOW)
             if GPIO.input(11)==0:
                 first_placed=True
-                GPIO.output(13,GPIO.HIGH)
+                GPIO.output(13,GPIO.HIGH) #Turn on the Laser
                 print("Paw Placed")
                 continue
         
@@ -149,15 +166,19 @@ class animal:
         while True:
             if GPIO.input(11)==0:
                 placed=True
+               
             else:
                 placed=False
+                GPIO.output(13,0)
 
             if first_placed is True and placed is False:
                 t_1=time()-t_0
                 print("Paw Placed time: %s seconds" % t_1)
-                GPIO.output(13,GPIO.LOW)
+                GPIO.output(13,GPIO.LOW) #Turn off the laser
+            
                 break
-        GPIO.cleanup()
+        GPIO.output(13,GPIO.LOW)    #Possibly could comment out
+        GPIO.cleanup()              #Could possibly comment out
         return t_1
 
     # Function for printing withdrawal times stored within list 
@@ -333,6 +354,9 @@ class testAnimals:
     
     #This method is what starts the entire system to even run a test
     def startExperiment(self):
+        #GPIO.setup(4,GPIO.OUT) #PIN OF LASER
+        #GPIO.output(4,GPIO.LOW) #initialize to low
+        
         saveAnimals=[]  #Create a list to store all animal's information
         saveAnimalsLength=0 #Keep track of the size of the list
        #Prompt user to start program

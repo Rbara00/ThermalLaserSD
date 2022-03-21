@@ -428,4 +428,8 @@ def main():
 
 ##Main definition##
 if __name__ == "__main__":
+<<<<<<< HEAD
     main()    
+=======
+    main()    
+>>>>>>> 1b2bf5c8ac6c3853da52b1a991fec11016caed84

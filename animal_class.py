@@ -95,14 +95,24 @@ class animal:
 
     #Method for performing a trial and saving the data
     def trial(self):
+
+        ############################################################################
+        #Setup GPIO Board for RPI
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(13,GPIO.OUT)
         GPIO.output(13,GPIO.LOW)
+        ############################################################################
+
         #Run a trial and insert withdrawal time into a list for exporting
         t_1=animal.timer()
+
+        ############################################################################
+        #Clear the GPIO Pins, overide laser to be off
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(13,GPIO.OUT)
         GPIO.output(13,GPIO.LOW)
+        ############################################################################
+
         t_1=float(t_1) #Ensure the time is a valid time with decimals
         #Was the trial valid enough for the user?
         valid_trial=input("Keep trial? (Yes/No): ")
@@ -128,11 +138,9 @@ class animal:
     #Method for recording withdrawal time
     def timer():
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(11,GPIO.IN)
-        #GPIO.setup(4,GPIO.OUT) #PIN OF LASER
-        #GPIO.output(4,GPIO.LOW) #initialize to low
-        GPIO.setup(13,GPIO.OUT)
-        GPIO.output(13,GPIO.LOW)
+        GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
+        GPIO.setup(13,GPIO.OUT) #Output to the Laser
+        GPIO.output(13,GPIO.LOW) #Initialize to off
     
         print("\tProgram Started")
         
@@ -145,13 +153,12 @@ class animal:
         #--------------------------------------------------------------
         
         first_placed=False
+        print("Searching for Paw")
         while first_placed is False:
             GPIO.output(13,GPIO.LOW)
-            print("Searching for Paw")
             if GPIO.input(11)==0:
                 first_placed=True
-                GPIO.output(13,GPIO.HIGH)
-                #GPIO.output(4,GPIO.HIGH) #turn on the laser
+                GPIO.output(13,GPIO.HIGH) #Turn on the Laser
                 print("Paw Placed")
                 continue
         
@@ -166,13 +173,12 @@ class animal:
 
             if first_placed is True and placed is False:
                 t_1=time()-t_0
-                #GPIO.output(4,GPIO.LOW) #turn off the laser
                 print("Paw Placed time: %s seconds" % t_1)
-                GPIO.output(13,GPIO.LOW)
+                GPIO.output(13,GPIO.LOW) #Turn off the laser
             
                 break
-        GPIO.output(13,GPIO.LOW)
-        GPIO.cleanup()
+        GPIO.output(13,GPIO.LOW)    #Possibly could comment out
+        GPIO.cleanup()              #Could possibly comment out
         return t_1
 
     # Function for printing withdrawal times stored within list 
@@ -423,4 +429,3 @@ def main():
 ##Main definition##
 if __name__ == "__main__":
     main()    
-

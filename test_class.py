@@ -1,21 +1,27 @@
 ###########################################
 ## 
-## Animal Class for thermal laser
+## Table Class for thermal laser
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
+## Author: Robert Bara
 ## Date:    4/5/2022
-## Version: 2.4
+## Version: 1.1
 ##
 ## Description:
-##  This python file contains the class functions to create, obtain data, and analyze the
-##  data for the thermal laser plantar test.
-##
+##  This python file contains a class to construct a table which will hold store
+##  an animal into a list avaliable at the given index which is based upon a group,
+##  graphically the table can be drawn as:
+##      [column index][list of cats]
+##       group0     : cat1,cat2,cat3
+##       group1     : cat1,cat2,cat3
+##        ...
+##       groupN     : N cats
 ## Usage:
-##  This program is invoked by test_class.py
+##  This program is invoked by test_class and utilizes inputs from the animal_class
 ##
 ########################################
-
-############ Includes ##################
+import tables as resultTb
+import animal_class as animal
 from datetime import date   
 from datetime import datetime
 import os
@@ -31,227 +37,6 @@ from enum import Enum
 from time import time
 from numpy import empty, save           # Import time to calculate withdrawal time
 import openpyxl                 # Import for exporting the animal's results to spreadsheets
-#############################################################
-# Table Class
-#############################################################
-class resultTb:
-    import animal2 as animal
-
-    #constructor for a table of lists which hold a test animal as an element
-    def __init__(self, size=100):
-        self.size=size                              #dynamically allocated memory for the size of the table
-        self.arr=[[] for i in range (self.size)]    #Creating the table as an array of lists
-        self.filled=0                               #Keeps track of how man animals are "filled" in the table
-        return
-    #Takes an animal and inserts it into the results table based upon their group number
-    def insert(self,curr_animal):
-        group=curr_animal.getGroup()
-        self.arr[group].append(curr_animal)
-        self.filled+=1
-        return
-    #Prints all animals results within the passed in group number, in order of when they were stored into group
-    def printIndex(self,group):
-        #in the table at row with index corresponding to the group number, iterate across the list of animals
-        for i in range(len(self.arr[group])):
-            print(self.arr[group][i].printTime())   #Print the current counter's animal results
-        return
-    #print all results stored within the table in order of groups
-    def printAll(self):
-        for i in range(self.size):
-            self.printIndex(i)
-        return
-############ animal Class #################
-class animal:
-    ##############################
-    #Constructor for animal
-    ##############################
-    def __init__(self,name,group):
-        self.name=name            #animal is named from user input
-        self.time=[]              #create a list of all the animal's withdrawal times
-        self.date = date.today()  #stores the corresponding test date
-        self.startTime=0          #stores the timestamp when testing is starting for cat
-        self.endTestTime=0        #stores the timestamp when testing is over for the cat
-        self.group=group          #stores the cat's group number
-        self.avg=0                #Initialize the average to be 0
-        self.standardDev=0        #Initialize the standard deviation to be 0
-        self.trialVariance=0      #Initialize the variance to be 0
-        self.numOfTrials=0        #Counter for how many trials were performed for animal
-        return
-    
-    ##########################################
-    # Class Functions:
-    # Getter Functions for animal's attributes
-    ##########################################
-    #Getter for the animal's name
-    def getName(self):
-        return self.name
-    #Getter for the test date corresponding to the animal
-    def getDate(self):
-        return self.date
-    #Getter for the animal's group number
-    def getGroup(self):
-        return self.group
-    #Getter for the animal's number of trials completed
-    def getNumOfTrials(self):
-        return self.numOfTrials    
-    #Getter for the average withdrawal time
-    def getAvg(self):
-        sample=self.time
-        self.avg=mean(sample)
-        return self.avg
-    #Getter for time at specifed trial
-    def getTimeAt(self,index):
-        return self.time[index] 
-    #Getter for the Standard Deviation of the animal's response times
-    def getStdev(self):
-        sample=self.time
-        self.standardDev=pstdev(sample)
-        return self.standardDev
-    #Getter for the Variance of the animal's response times
-    def getVar(self):
-        sample=self.time
-        self.trialVariance=pvariance(sample)
-        return self.trialVariance
-
-    ###################################################################################
-    # Functions for turning on laser system and inserting withdrawal time into database
-    ###################################################################################
-    #Method for inserting a new withdrawl time into the list
-    def insertTime(self,new_time):
-        self.time.append(new_time)
-        self.numOfTrials+=1
-        return
-
-    #Method for performing a trial and saving the data
-    def trial(self):
-
-        ############################################################################
-        #Setup GPIO Board for RPI
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(13,GPIO.OUT)
-       # GPIO.output(13,GPIO.LOW)
-        ############################################################################
-
-        #Run a trial and insert withdrawal time into a list for exporting
-        t_1=animal.timer()
-
-        ############################################################################
-        #Clear the GPIO Pins, overide laser to be off
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(13,GPIO.OUT)
-       # GPIO.output(13,GPIO.LOW)
-        ############################################################################
-
-        t_1=float(t_1) #Ensure the time is a valid time with decimals
-        #Was the trial valid enough for the user?
-        valid_trial=self.validInput(input("Keep trial? (Yes/No/Quit): "))
-        if valid_trial==0:
-            #perform a retrial
-            self.trial()
-        if valid_trial==1:        
-            #When a valid trial is ran, 
-            self.insertTime(t_1) #place withdrawal time into list
-            if self.numOfTrials>1:
-            #Update the analysis
-                self.avg=self.getAvg()
-                self.standardDev=self.getStdev()
-                self.trialVariance=self.getVar()
-            else:
-                #If there is only 1 trial, dont update analysis
-                self.avg=self.getTimeAt(0) #Average is the only valid trial
-                self.standardDev=0
-                self.trialVariance=0
-        return
-        
-    #Method for recording withdrawal time
-    def timer():
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
-       # GPIO.setup(13,GPIO.OUT) #Output to the Laser
-       # GPIO.output(13,GPIO.LOW) #Initialize to off
-    
-        print("\tProgram Started")
-        
-        #--------------------------------------------------------------
-        
-        t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
-        
-        print("\tPaw Placed time: %s seconds" % t_1)
-        return t_1
-        #--------------------------------------------------------------
-        
-        first_placed=False
-        print("Searching for Paw")
-        while first_placed is False:
-            GPIO.output(13,GPIO.LOW)
-            if GPIO.input(11)==0:
-                first_placed=True
-                GPIO.output(13,GPIO.HIGH) #Turn on the Laser
-                print("Paw Placed")
-                continue
-        
-        t_0=time()
-        while True:
-            if GPIO.input(11)==0:
-                placed=True
-               
-            else:
-                placed=False
-                GPIO.output(13,0)
-
-            if first_placed is True and placed is False:
-                t_1=time()-t_0
-                print("Paw Placed time: %s seconds" % t_1)
-                GPIO.output(13,GPIO.LOW) #Turn off the laser
-            
-                break
-        GPIO.output(13,GPIO.LOW)    #Possibly could comment out
-        GPIO.cleanup()              #Could possibly comment out
-        return t_1
-
-    # Function for printing withdrawal times stored within list 
-    def printTime(self):
-        trialNum=1      #Counter for the current Trial
-        #Print the animal's information and date
-        print("Animal's Name:",self.name,"\tGroup:",self.group,"\tTest Date:",self.date,"\t Test Times:",self.startTime,"-",self.endTestTime)
-        print("----------------------------------------------------------------------------")
-        
-        #Print the times for each trial
-        for i in self.time:
-            print("Trial",trialNum,":","%s seconds" % i)
-            trialNum+=1
-        #Print the animal's average time, standard deviation, variance
-        print("\nAnalysis")
-        
-        #If there is only 1 trial, dont update analysis
-        if self.numOfTrials<=1:
-            self.avg=self.getTimeAt(0)  #Average will be the only valid trial
-            self.standardDev=0          #Standard Dev and Variance would be 0 due to insufficient trials
-            self.trialVariance=0
-            print("***Not enough trial data to perform analysis***")
-        #Otherwise if there are multiple valid trials, print analysis
-        else:
-            #Print the animal's analysis
-            print("Average:", self.avg)
-            print("Variance:", self.trialVariance)
-            print("Standard Deviation:", self.standardDev,"\n")
-        return 
-    #Checks yes, no, or when to quit program
-    def validInput(self,user_input):
-        while True:
-            if(user_input.lower()=="y") or user_input.lower()=="yes" or user_input=="1":
-                output=1
-                break
-            if(user_input.lower()=="n") or user_input.lower()=="no" or user_input=="0":
-                output=0
-                break
-            if(user_input.lower()=="q") or user_input.lower()=="quit" or user_input=="-1":
-                output=-1
-                break
-            #Prompt for a new input if invalid
-            user_input=input("Please Enter a Valid Input (Yes/No/Quit)")
-        return output
-
 #####################################################################
 # Create a class to run a test and export all the animals information 
 #####################################################################
@@ -285,7 +70,7 @@ class testAnimals:
         #For 0 to max number of groups, load and write data from the results table into excel
         for i in range(self.numberOfGroups+1):
             curr_group=resultTb.arr[i]              #For readability, get the current group
-            print(wb1.sheetnames)
+            #print(wb1.sheetnames)
             groupTimes=[]                           #Keeps track of all withdrawawl times in the group
             groupTrialNum=1                         #Counter for how many trials were within a group
             #check if in the correct group sheet
@@ -372,7 +157,7 @@ class testAnimals:
     #This method is what starts the entire system to even run a test
     def startExperiment(self):
         #Create a table to hold any results
-        results=resultTb()
+        results=resultTb.resultTb()
 
        #Prompt user to start program
         print("\n*******Welcome to the Plantar Thermal Laser test.*******")
@@ -382,7 +167,7 @@ class testAnimals:
         while (beginProgram==1):
             #Create an animal data structure
             name,group=testAnimals.promptAnimalInfo()
-            curr_animal=animal(name,group)
+            curr_animal=animal.animal(name,group)
             curr_animal.startTime=datetime.now().strftime("%H:%M:%S")  #get the timestamp when testing is beginning
             trialNum=1                                                  #Keeps track of trial of current animal
 

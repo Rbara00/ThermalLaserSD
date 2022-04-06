@@ -37,6 +37,7 @@ from enum import Enum
 from time import time
 from numpy import empty, save           # Import time to calculate withdrawal time
 import openpyxl                 # Import for exporting the animal's results to spreadsheets
+import openpyxl.chart
 #####################################################################
 # Create a class to run a test and export all the animals information 
 #####################################################################
@@ -100,20 +101,76 @@ class testAnimals:
                         "Stdev","Trial Variance","Test Date", "Start Test Time","End Test Time"])
         #Save the excel file
         wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+       
+        #generate graph
+        #Save the excel file
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
         # Close the workbook and return
         wb1.close()
+        return workbookName
+    def groupAnalysis(self,workbookName):
+        #Check if the excel file exists, if not return
+        try: 
+            #load the excel file with the corresponding workbook name
+            wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        except FileNotFoundError:
+            print("invalid file name")
+            return
+        #Remove the results sheet and Re-Analyze
+        if ("Results") in wb1.sheetnames:
+            wb1.remove(wb1["Results"])
+        ws0=wb1.create_sheet()
+        ws0.title="Results"
+        ws0.append(["Group Num","Avg Times"])
+
+        #Obtain the Group Average
+        ws1=wb1["Group"+str(1)]
+        max_sheet=int(len(wb1.sheetnames))
+        i=1
+        for i in range(0,max_sheet):
+            #check if in the correct group sheet
+            if ("Group"+str(i)) in wb1.sheetnames:
+                ws1=wb1["Group"+str(i)]
+                max_row=ws1.max_row
+                print(i)
+                
+                #Locate Cell with latest group average
+                groupAvg=ws1.cell(max_row,3).value
+                groupStdev=ws1.cell(max_row,4).value
+                if (isinstance(groupAvg, str) is not True):
+                    print(groupAvg)
+                    #if (isinstance(groupStdev, float)):
+                     #   print(groupStdev)
+                        #Copy group number and average into Results sheet
+                    ws0.append([i,groupAvg])
+        
+        #Generate a Bar Graph for averages
+        chart1 = openpyxl.chart.bar_chart.BarChart()
+        chart1.type = "col"
+        chart1.style = 3
+        chart1.title = "Average Responses per Group"
+        chart1.y_axis.title = 'Avg Withdrawal Times(ms)'
+        chart1.x_axis.title = 'Group Numbers'
+
+        #Date to be graphed
+        data = openpyxl.chart.Reference(ws0, min_col=2, min_row=1, max_row=ws0.max_row, max_col=ws0.max_column)
+        #category                       #sheetname, 
+        cats = openpyxl.chart.Reference(ws0, min_col=1, min_row=2, max_row=ws0.max_row)
+        chart1.add_data(data, titles_from_data=True)
+        chart1.set_categories(cats)
+        chart1.shape = 8
+        ws0.add_chart(chart1, "G2")     #Position where graph will be added
+        
+        #Save and close the excel file
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        wb1.close()
+
         return
 
     #This function creates a spreadsheet based on the workbook name and labels the proper columns for the animal's data
     def exportSetup(self,workbookName):
         #Create a work book
         wb1=openpyxl.Workbook()
-        #Create a worksheet within the workbook
-        ws1=wb1.active
-        ws1.title="Results"
-        #initialize all the column names
-        ws1.append(["Group","Num of Group Trials","Group Avg","Animal Name","Trial Num","Withdrawal Times","Avg Time",
-                     "Stdev","Trial Variance","Test Date", "Start Test Time","End Test Time"])
         #prompt for an output file name
         wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
         #close the workbook
@@ -211,13 +268,13 @@ class testAnimals:
             #If the User Answers No, print and export results, then exit the program
             if ((testAnotheranimal==0) or (testAnotheranimal==-1)): 
                 results.printAll()
-                self.exportingResults(results)
+                workbookName=self.exportingResults(results)
                 beginProgram=0 #Exit loop
                         
         #Exit program when testing is stopped
         if (beginProgram==0 ) or (beginProgram==-1):     
             print("*****Ending Testing*****")
-        return
+        return workbookName
 
 #########################################
 #           Driver Function             #
@@ -225,7 +282,10 @@ class testAnimals:
 def main():
     #create a test and start the experiment
     test=testAnimals()
-    test.startExperiment()
+#    workbookName=test.startExperiment()
+    workbookName=input("Open.xlsx?")
+    test.groupAnalysis(workbookName)
+
     #exit program
     return 0
 

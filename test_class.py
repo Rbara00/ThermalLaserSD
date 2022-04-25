@@ -1,41 +1,35 @@
+#!/usr/bin/python3
 ###########################################
 ## 
-## Table Class for thermal laser
+## Test Class for thermal laser
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    4/5/2022
-## Version: 1.1
+## Date:    4/25/2022
+## Version: 1.2
 ##
 ## Description:
-##  This python file contains a class to construct a table which will hold store
-##  an animal into a list avaliable at the given index which is based upon a group,
-##  graphically the table can be drawn as:
-##      [column index][list of cats]
-##       group0     : cat1,cat2,cat3
-##       group1     : cat1,cat2,cat3
-##        ...
-##       groupN     : N cats
+##  This python file performs a thermal laser test for a medium sized animal such as a cat,
+##  the program prompts the user through the terminal for commands and activates the laser 
+##  in the system to gather withdrawal times for each animal. The data is then stored to the
+##  animal and the average, standard deviation, and variance are calculated for each animal.
+##  The results are then exported to excel where the group average and standard deviation are 
+##  plotted against each group.
+##
 ## Usage:
-##  This program is invoked by test_class and utilizes inputs from the animal_class
+##  Python3 test_class.py       or      ./test_class.py
 ##
 ########################################
 import tables as resultTb
 import animal_class as animal
-from datetime import date   
 from datetime import datetime
 import os
-from os import stat
-from re import S
-import re
-from sre_constants import MAXGROUPS             # Import date class from datetime module
-from statistics import pstdev    # Import statistics to utilize mean, standard deviation, and variance calculations
+from statistics import pstdev   # Import statistics to utilize mean, standard deviation, and variance calculations
 from statistics import pvariance
 from statistics import mean
-from enum import Enum
+from math import sqrt
 #import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
 from time import time
-from numpy import empty, save           # Import time to calculate withdrawal time
 import openpyxl                 # Import for exporting the animal's results to spreadsheets
 import openpyxl.chart
 #####################################################################
@@ -51,121 +45,6 @@ class testAnimals:
     #####################################################
     # Functions for exporting results to spreadsheet
     #####################################################
-    def exportingResults(self,results):
-        resultTb=results
-        workbookName=input("Save Output File As .xlsx?")
-        #Check if the excel file exists, if not create it
-        try: 
-            #load the excel file with the corresponding workbook name
-            wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
-        except FileNotFoundError:
-            #Create the excel file with the corresponding workbook name
-            wb1=self.exportSetup(workbookName)
-            #Create enough sheets for each group
-            for i in range(self.numberOfGroups+1):
-                ws=wb1.create_sheet()
-                ws.title="Group"+str(i)
-                ws.append(["Group","Num of Group Trials","Group Avg","Animal Name","Trial Num","Withdrawal Times","Avg Time",
-                            "Stdev","Trial Variance","Test Date", "Start Test Time","End Test Time"])
-        
-        #For 0 to max number of groups, load and write data from the results table into excel
-        for i in range(self.numberOfGroups+1):
-            curr_group=resultTb.arr[i]              #For readability, get the current group
-            #print(wb1.sheetnames)
-            groupTimes=[]                           #Keeps track of all withdrawawl times in the group
-            groupTrialNum=1                         #Counter for how many trials were within a group
-            #check if in the correct group sheet
-            if ("Group"+str(i)) in wb1.sheetnames:
-                ws=wb1["Group"+str(i)]              #Get the correct group's sheet
-                #Iterate across the list at the group index, where each element is a stored animal
-                for j in range(len(curr_group)):
-                    curr_animal=curr_group[j]       #For readability, get the current animal
-                    trialNum=1                      #For printing the trial number corresponding to the withdrawal time
-                    analyzeTime=[]                  #For performing analysis for all data up to a given point
-                    for w_time in curr_animal.time:
-                        analyzeTime.append(w_time)  #store time local to cat for analysis
-                        groupTimes.append(w_time)   #store time local to group for analysis
-                        #Print all the group and cat data to excel
-                        ws.append([curr_animal.getGroup(),groupTrialNum,mean(groupTimes),curr_animal.getName(), trialNum, w_time, 
-                                mean(analyzeTime), pstdev(analyzeTime), pvariance(analyzeTime)
-                                ,curr_animal.date, curr_animal.startTime,curr_animal.endTestTime])
-                        trialNum+=1                 
-                        groupTrialNum+=1
-            #Otherwise create as many sheets as needed for the number of groups avaliable
-            else:
-                ws=wb1.create_sheet()
-                #Label the sheet based on the group number
-                ws.title="Group"+str(i)
-                #Create column labels
-                ws.append(["Group","Num of Group Trials","Group Avg","Animal Name","Trial Num","Withdrawal Times","Avg Time",
-                        "Stdev","Trial Variance","Test Date", "Start Test Time","End Test Time"])
-        #Save the excel file
-        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
-       
-        #generate graph
-        #Save the excel file
-        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
-        # Close the workbook and return
-        wb1.close()
-        return workbookName
-    def groupAnalysis(self,workbookName):
-        #Check if the excel file exists, if not return
-        try: 
-            #load the excel file with the corresponding workbook name
-            wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
-        except FileNotFoundError:
-            print("invalid file name")
-            return
-        #Remove the results sheet and Re-Analyze
-        if ("Results") in wb1.sheetnames:
-            wb1.remove(wb1["Results"])
-        ws0=wb1.create_sheet()
-        ws0.title="Results"
-        ws0.append(["Group Num","Avg Times"])
-
-        #Obtain the Group Average
-        ws1=wb1["Group"+str(1)]
-        max_sheet=int(len(wb1.sheetnames))
-        i=1
-        for i in range(0,max_sheet):
-            #check if in the correct group sheet
-            if ("Group"+str(i)) in wb1.sheetnames:
-                ws1=wb1["Group"+str(i)]
-                max_row=ws1.max_row
-                print(i)
-                
-                #Locate Cell with latest group average
-                groupAvg=ws1.cell(max_row,3).value
-                groupStdev=ws1.cell(max_row,4).value
-                if (isinstance(groupAvg, str) is not True):
-                    print(groupAvg)
-                    #if (isinstance(groupStdev, float)):
-                     #   print(groupStdev)
-                        #Copy group number and average into Results sheet
-                    ws0.append([i,groupAvg])
-        
-        #Generate a Bar Graph for averages
-        chart1 = openpyxl.chart.bar_chart.BarChart()
-        chart1.type = "col"
-        chart1.style = 3
-        chart1.title = "Average Responses per Group"
-        chart1.y_axis.title = 'Avg Withdrawal Times(ms)'
-        chart1.x_axis.title = 'Group Numbers'
-
-        #Date to be graphed
-        data = openpyxl.chart.Reference(ws0, min_col=2, min_row=1, max_row=ws0.max_row, max_col=ws0.max_column)
-        #category                       #sheetname, 
-        cats = openpyxl.chart.Reference(ws0, min_col=1, min_row=2, max_row=ws0.max_row)
-        chart1.add_data(data, titles_from_data=True)
-        chart1.set_categories(cats)
-        chart1.shape = 8
-        ws0.add_chart(chart1, "G2")     #Position where graph will be added
-        
-        #Save and close the excel file
-        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
-        wb1.close()
-
-        return
 
     #This function creates a spreadsheet based on the workbook name and labels the proper columns for the animal's data
     def exportSetup(self,workbookName):
@@ -177,6 +56,166 @@ class testAnimals:
         wb1.close
         return wb1  #return the workbook so we can read/write to it with the other export functions
     
+    #This function checks for the appropriate test result spreadsheet and exports/analyzes any new test results to the sheet
+    def exportingResults(self,results):
+        resultTb=results
+        #Prompt to save results as excel file
+        workbookName=input("Saving output to .xlsx file. Enter Filename: ")+str('.xlsx')
+        #Check if the excel file exists, if not create it
+        try: 
+            #load the excel file with the corresponding workbook name
+            wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),(workbookName)))
+        except FileNotFoundError:
+            #Create the excel file with the corresponding workbook name
+            wb1=self.exportSetup(workbookName)
+            #Create enough sheets for each group
+            for i in range(1,self.numberOfGroups+1):
+                ws=wb1.create_sheet()
+                ws.title="Group"+str(i)
+                #write labels to excel sheet
+                self.exportLabels(ws)
+                ws=self.columnWidth(ws)     #Format the Column Width
+
+        #Write the test's results data to excel and compute analysis
+        wb1=self.exportDataToResults(wb1, resultTb)
+
+        #Save the excel file
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        # Close the workbook and return
+        wb1.close()
+        return workbookName
+
+    #This function writes the test results to the correct group's sheet, or creates a blank sheet for future testing
+    def exportDataToResults(self, wb1, resultTb):
+        #For 1 to max number of groups, load and write data from the results table into excel
+        for i in range(1,self.numberOfGroups+1):
+            curr_group=resultTb.arr[i]              #For readability, get the current group
+            
+            #check if in the correct group sheet
+            if ("Group"+str(i)) in wb1.sheetnames:
+                ws=wb1["Group"+str(i)]              #Get the correct group's sheet
+                max_row=ws.max_row                  #Get the max row of the sheet
+                groupTrialNum=max_row    #update the total number of trials per group
+            
+                #Iterate across the list at the group index, where each element is a stored animal
+                for j in range(len(curr_group)):
+                    curr_animal=curr_group[j]       #For readability, get the current animal
+                    trialNum=1                      #For printing the trial number corresponding to the withdrawal time
+                    analyzeTime=[]                  #For performing analysis for all data up to a given point
+                   
+                    #Export and Analyze each withdrawal time for the current animal
+                    for w_time in curr_animal.time:
+                        analyzeTime.append(w_time)  #store current time local to animal for analysis
+                        groupAvg='=AVERAGE(G2:G'+str(groupTrialNum+1)+')'
+                        groupStdev='=STDEVP(G2:G'+str(groupTrialNum+1)+')'
+                        #Print all the group and animals data to excel
+                        ws.append([curr_animal.getGroup(), groupTrialNum, groupAvg, groupStdev, 
+                                curr_animal.getName(), trialNum, w_time, mean(analyzeTime), 
+                                pstdev(analyzeTime), pvariance(analyzeTime), curr_animal.date, 
+                                curr_animal.startTime, curr_animal.endTestTime])
+                        #Increase trial number counters
+                        trialNum+=1                 
+                        groupTrialNum+=1
+
+            #Otherwise create as many sheets as needed for the number of groups avaliable
+            else:
+                ws=wb1.create_sheet()
+                #Label the sheet based on the group number
+                ws.title="Group"+str(i)
+                #Create column labels
+                self.exportLabels(ws)
+                #Write data to new sheets through recursion
+                self.exportDataToResults(wb1,resultTb)  
+        #Return updated workbook
+        return wb1
+
+    #This function creates a sheet specifically to graph the results of all group's average times and standard deviation
+    def graphResults(self,workbookName):
+        #Check if the excel file exists, if not return
+        try: 
+            #load the excel file with the corresponding workbook name
+            wb1=openpyxl.load_workbook(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        except FileNotFoundError:
+            print("Invalid file name")
+            return
+
+        #Remove the results sheet and Re-Analyze
+        if ("Results") in wb1.sheetnames:
+            wb1.remove(wb1["Results"])
+        #Create the graph results sheet
+        ws0=wb1.create_sheet()
+        ws0.title="Results"
+        ws0.append(["Group","Avg Times","Stdev"])
+
+        #Obtain the latest Group Averages and standard deviation
+        ws1=wb1["Group"+str(1)]
+        max_sheet=int(len(wb1.sheetnames))
+        for i in range(1,max_sheet):
+            #check if in the correct group sheet
+            if ("Group"+str(i)) in wb1.sheetnames:
+                ws1=wb1["Group"+str(i)]
+                max_row=ws1.max_row
+                #Check if there is data to graph
+                if isinstance(ws1.cell(max_row,1).value,str) is False:
+                    #Locate the current group's latest group average and standard deviation
+                    groupNum='=Group'+str(i)+'!A'+str(max_row)
+                    groupAvg='=Group'+str(i)+'!C'+str(max_row)
+                    groupStdev='=Group'+str(i)+'!D'+str(max_row)
+                    ws0.append([groupNum,groupAvg,groupStdev])     #write data to the results sheet
+        
+        #Create the bar graph from the results    
+        ws0=self.createBarGraphResults(ws0)
+
+        #Save and close the excel file
+        wb1.save(os.path.join(os.path.dirname(os.path.abspath(__file__)),workbookName))
+        wb1.close()
+        return
+    
+    #This function generates a bar graph for the results sheet
+    def createBarGraphResults(self,ws0,):
+        #Generate a Bar Graph for averages
+        chart1 = openpyxl.chart.bar_chart.BarChart()
+        chart1.type = "col"
+        chart1.style = 3
+        chart1.title = "Average Responses of All Groups"
+        chart1.y_axis.title = 'Avg and Stdev of Withdrawal Times'
+        chart1.x_axis.title = 'Group Numbers'
+
+        #Data to be graphed
+        data = openpyxl.chart.Reference(ws0, min_col=2, min_row=1, max_row=ws0.max_row, max_col=ws0.max_column)
+        cats = openpyxl.chart.Reference(ws0, min_col=1, min_row=2, max_row=ws0.max_row)
+        chart1.add_data(data, titles_from_data=True)
+        chart1.set_categories(cats)
+        chart1.shape = 8
+        ws0.add_chart(chart1, "G2")     #Position where graph will be added
+
+        #Return the updated results sheet with graph
+        return ws0
+
+    #Formats the excel column width nicely
+    def columnWidth(self,ws):
+        ws.column_dimensions['A'].width=7       #Group Number
+        ws.column_dimensions['B'].width=10       #Number of trials in group
+        ws.column_dimensions['C'].width=12      #Group's Average Response Time
+        ws.column_dimensions['D'].width=12      #Group's Standard Deviation
+        ws.column_dimensions['E'].width=12      #Name of Animal
+        ws.column_dimensions['F'].width=9       #Number of trials per Animal
+        ws.column_dimensions['G'].width=14      #Animal Response time at given trial
+        ws.column_dimensions['H'].width=9       #Animal's Average Response Time
+        ws.column_dimensions['I'].width=9       #Animal's Standard Deviation
+        ws.column_dimensions['J'].width=9      #Animal's Variance
+        ws.column_dimensions['K'].width=12      #Date of Testing
+        ws.column_dimensions['L'].width=11      #Starting time for testing animal
+        ws.column_dimensions['M'].width=11       #Ending time for testing animal
+        return ws
+    
+    #Writes the labels for a group's sheet
+    def exportLabels(self,ws):
+        ws.append(["Group","Group Trial Num","Group Avg","Group Stdev","Animal Name",
+                   "Trial Num","Response Times","Avg Time","Stdev","Trial Var",
+                   "Test Date", "Start Test Time","End Test Time"])
+        return ws
+
     ###############################################################################             
     #  Functions for starting the test and prompting for an animals information                          
     ###############################################################################    
@@ -188,7 +227,8 @@ class testAnimals:
         while True:
             try:
                 group = int(input("Enter subject's Group number, minimum of 1: "))
-                break
+                if group>=1:
+                    break
             except ValueError:
                 print("Please enter Group number as an integer")  
             continue
@@ -217,7 +257,7 @@ class testAnimals:
         results=resultTb.resultTb()
 
        #Prompt user to start program
-        print("\n*******Welcome to the Plantar Thermal Laser test.*******")
+        print("\n*******Welcome to the Thermal Plantar Laser test.*******")
         beginProgram=self.validInput(input("Would you like to run a trial? (Yes/No/Quit): "))
 
         #Determine valid response, if so create a animal as an object
@@ -282,10 +322,8 @@ class testAnimals:
 def main():
     #create a test and start the experiment
     test=testAnimals()
-#    workbookName=test.startExperiment()
-    workbookName=input("Open.xlsx?")
-    test.groupAnalysis(workbookName)
-
+    workbookName=test.startExperiment()
+    test.graphResults(workbookName)
     #exit program
     return 0
 

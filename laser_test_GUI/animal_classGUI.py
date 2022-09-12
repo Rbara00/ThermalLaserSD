@@ -92,9 +92,9 @@ class animal:
     def trial_gui(self,placed_label):
         ############################################################################
         #Setup GPIO Board for RPI
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(13,GPIO.OUT)
-       # GPIO.output(13,GPIO.LOW)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(13,GPIO.OUT)
+        GPIO.output(13,GPIO.LOW)
         ############################################################################
 
         #Run a trial and insert withdrawal time into a list for exporting
@@ -102,9 +102,9 @@ class animal:
 
         ############################################################################
         #Clear the GPIO Pins, overide laser to be off
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(13,GPIO.OUT)
-       # GPIO.output(13,GPIO.LOW)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(13,GPIO.OUT)
+        GPIO.output(13,GPIO.LOW)
         ############################################################################
 
         t_1=float(t_1) #Ensure the time is a valid time with decimals
@@ -132,31 +132,32 @@ class animal:
         
     #Method for recording withdrawal time with laser
     def timer(self,placed_label):
-       # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
-       # GPIO.setup(13,GPIO.OUT) #Output to the Laser
-       # GPIO.output(13,GPIO.LOW) #Initialize to off
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
+        GPIO.setup(13,GPIO.OUT) #Output to the Laser
+        GPIO.output(13,GPIO.LOW) #Initialize to off
     
-        print("\tProgram Started")
+        #print("\tProgram Started")
         
         first_placed=False
         print("Searching for Paw")
         placed_label.config(text="Photodiode Status: Searching for Paw")
         #--------------------------------------------------------------
         
-        t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
+        #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
         
-        print("\tPaw Placed time: %s seconds" % t_1)
-        placed_label.config(text="Photodiode Status: Paw Placed")
+        #print("\tPaw Placed time: %s seconds" % t_1)
 
-        return t_1
+
+        #return t_1
         #--------------------------------------------------------------
         while first_placed is False:
             GPIO.output(13,GPIO.LOW)
             if GPIO.input(11)==0:
                 first_placed=True
                 GPIO.output(13,GPIO.HIGH) #Turn on the Laser
-                print("Paw Placed")
+                #print("Paw Placed")
+                placed_label.config(text="Photodiode Status: Paw Placed")
                 continue
         
         t_0=time()
@@ -170,7 +171,8 @@ class animal:
 
             if first_placed is True and placed is False:
                 t_1=time()-t_0
-                print("Paw Placed time: %s seconds" % t_1)
+                #print("Paw Placed time: %s seconds" % t_1)
+                placed_label.config(text="Photodiode Status: Paw Placed")
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
             
                 break

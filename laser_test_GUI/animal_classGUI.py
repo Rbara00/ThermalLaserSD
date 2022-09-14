@@ -22,7 +22,7 @@ from os import stat
 from re import S
 from sre_constants import MAXGROUPS             # Import date class from datetime module
 from statistics import pstdev, pvariance, mean    # Import statistics to utilize mean, standard deviation, and variance calculations
-#import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
+import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
 from time import time
 from tkinter import*
 from tkinter import messagebox

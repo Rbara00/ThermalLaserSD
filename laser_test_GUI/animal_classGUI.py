@@ -140,7 +140,7 @@ class animal:
         #print("\tProgram Started")
         
         first_placed=False
-        print("Searching for Paw")
+        #print("Searching for Paw")
         placed_label.config(text="Photodiode Status: Searching for Paw")
         #--------------------------------------------------------------
         

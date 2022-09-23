@@ -86,7 +86,7 @@ def startExperiment():
     curr_animal.endTestTime=datetime.now().strftime("%H:%M:%S")  #get the timestamp when testing is over for current cat
     global mytext
     mytext=("Name: " + currName + "  Group: " + str(curr_animal.getGroup()) + "  Trial: " + str(curr_animal.getNumOfTrials()) + "  Withdrawal Time: " 
-            + str(curr_animal.getTimeAt(curr_animal.getNumOfTrials()-1)) +"  Start Time: " + str(curr_animal.startTime) + "  End Time: " + 
+            + str(curr_animal.getTimeAt(curr_animal.getNumOfTrials()-1)) +"\nStart Time: " + str(curr_animal.startTime) + "  End Time: " + 
             str(curr_animal.endTestTime))
 
 #########################################
@@ -100,7 +100,7 @@ def Button_1():
     promptAnimalInfo()
     #Update Labels
     mytext=mytext=("Name: " + currName + "  Group: " + str(curr_animal.getGroup()) + "  Trial: " + "  Withdrawal Time: " 
-                    +"  Start Time: " + "  End Time: ")
+                    +"\nStart Time: " + "  End Time: ")
     l4.configure(text=mytext)
     #Switches to Testing Menu
     menus.add(frame2,text='Laser Test Menu')
@@ -123,7 +123,7 @@ def Button_4():
     promptAnimalInfo()          #Prompt for new animal
     #Update Labels
     mytext=mytext=("Name: " + currName + "  Group: " + str(curr_animal.getGroup()) + "  Trial: " + "  Withdrawal Time: " 
-                    +"  Start Time: " + "  End Time: ")
+                    +"\nStart Time: " + "  End Time: ")
     l4.configure(text=mytext)
 
 #Saves the spreadsheet and exits the program
@@ -144,8 +144,9 @@ def Button_5():
 # Creating menus 
 root = Tk()
 root.title("Thermal Laser Plantar Test")
-root.geometry("1000x500")
-root.iconbitmap(os.path.join(os.path.dirname(os.path.abspath(__file__)),('lemay.ico')))
+root.geometry("800x500")
+root.resizable(True,True)
+#root.iconbitmap(os.path.join(os.path.dirname(os.path.abspath(__file__)),('lemay.ico')))
 results=resultTb.resultTb()
 
 #Create a notebook to store menus as tabs
@@ -161,36 +162,37 @@ style.theme_create( "MyStyle", parent="alt", settings={
 style.theme_use("MyStyle")
 
 # setup frame 1 as start menu and frame 2 as test menu
-frame1=Frame(menus,width=1000,height=500,bg="#7F7FFF")
-frame2=Frame(menus,width=1000,height=500,bg='red4')
+frame1=Frame(menus,width=800,height=500,bg="#7F7FFF")
+frame2=Frame(menus,width=800,height=500,bg='red4')
 frame1.pack()
 frame1.pack_propagate(0)
 frame2.pack()
 frame2.pack_propagate(0)
+
 # Add frames as tabs to GUI and hide the Test menu so only the main menu appears
 menus.add(frame1,text='Main Menu')
 menus.add(frame2,text='Laser Test Menu')
 menus.hide(1)
 
 # Labels and Buttons for main menu
-l1=  Label(frame1, text="Welcome to the Thermal Laser Test", bg="#7F7FFF",fg="yellow", font=("Times",30,"bold","underline")).pack(pady=(100,0))
-l2=  Label(frame1, text="Would you like to Run a Test?", bg="#7F7FFF",fg="yellow", font=("Times",25,"bold")).pack()
+l1=  Label(frame1, text="Welcome to the Thermal Laser Test", bg="#7F7FFF",fg="yellow", font=("Times",25,"bold","underline")).pack(pady=(100,0))
+l2=  Label(frame1, text="Would you like to Run a Test?", bg="#7F7FFF",fg="yellow", font=("Times",20,"bold")).pack()
 B1 = Button(frame1, text = "Start Test",height=3,width=25,command = Button_1).pack(side="left", anchor="e",expand=True)  
 B2 = Button(frame1, text = "Exit",height=3,width=25,command = Button_2).pack(side="right", anchor="w",expand=True)  
 
 #Labels and buttons for Test menu
 l3=  Label(frame2, text="Place Animal onto System, then click 'Start' to begin a Test", bg="red4",fg="yellow", font=("Times",20,"bold","underline"))
-l3.place(x=150,y=100)
+l3.place(relx=0.05,rely=.1)
 l4=  Label(frame2, text=mytext, font=("Times",15,"bold"),bg="red4",fg="yellow")
 l4.pack(anchor="center", expand=True)
 
 #PhotoDiode Label
 placed_label=Label(frame2,text="Photodiode Status:",font=("Times",15,"bold"),bg="red4",fg="white")
-placed_label.place(x=350,y=160)
+placed_label.place(relx=.3,rely=.3)
 
-B3 = Button(frame2, text = "Start Laser Test",height=2,width=35,command=Button_3).place(x=120,y=300)  
-B4 = Button(frame2, text = "Select New Animal",height=2,width=35,command = Button_4).place(x=385,y=300)  
-B5=  Button(frame2, text = "Exit",height=2,width=35,command = Button_5).place(x=650,y=300) 
+B3 = Button(frame2, text = "Start Laser Test",height=2,width=25,command=Button_3).place(relx=0.1,rely=0.7)  
+B4 = Button(frame2, text = "Select New Animal",height=2,width=25,command = Button_4).place(relx=0.35,rely=0.7)  
+B5=  Button(frame2, text = "Exit",height=2,width=25,command = Button_5).place(relx=0.6,rely=0.7) 
 
 #define function if the user hits the "x" at the top of the window
 def on_closing():

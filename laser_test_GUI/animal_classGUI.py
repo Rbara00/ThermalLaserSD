@@ -24,6 +24,7 @@ from sre_constants import MAXGROUPS             # Import date class from datetim
 from statistics import pstdev, pvariance, mean    # Import statistics to utilize mean, standard deviation, and variance calculations
 import RPi.GPIO as GPIO        # Import General-Purpose In/Out for RPI4 to control laser and photodiode
 from time import time
+from time import sleep          # Import time delay to delay laser start up to prevent false readings
 from tkinter import*
 from tkinter import messagebox
 
@@ -157,7 +158,13 @@ class animal:
                 first_placed=True
                 GPIO.output(13,GPIO.HIGH) #Turn on the Laser
                 #print("Paw Placed")
-                placed_label.config(text="Photodiode Status: Paw Placed")
+                placed_label.config(text="Photodiode Status: Paw Placed Starting Laser in 3")
+                sleep(1)
+                placed_label.config(text="Photodiode Status: Paw Placed Starting Laser in 2")
+                sleep(1)
+                placed_label.config(text="Photodiode Status: Paw Placed Starting Laser in 1")
+                sleep(1)
+                placed_label.config(text="Photodiode Status: Paw Placed Laser on")
                 continue
         
         t_0=time()
@@ -172,7 +179,7 @@ class animal:
             if first_placed is True and placed is False:
                 t_1=time()-t_0
                 #print("Paw Placed time: %s seconds" % t_1)
-                placed_label.config(text="Photodiode Status: Paw Placed")
+                placed_label.config(text="Photodiode Status: Paw Removed Laser Off")
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
             
                 break

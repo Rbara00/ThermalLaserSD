@@ -4,8 +4,8 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    10/1/2022
-## Version: 3
+## Date:    4/5/2022
+## Version: 2.5
 ##
 ## Description:
 ##  This python file contains the class functions to create an animal data type, obtain data, and analyze the
@@ -90,12 +90,12 @@ class animal:
         return
 
     #Trial function with prompt from GUI
-    def trial_gui(self,placed_label):
+    def trial_gui(self,placed_label,root):
         ############################################################################
         #Setup GPIO Board for RPI
        # GPIO.setmode(GPIO.BOARD)
-       # GPIO.setup(13,GPIO.OUT)
-       # GPIO.output(13,GPIO.LOW)
+       # GPIO.setup(13,GPIO.OUT)    #Output Pin for Laser
+       # GPIO.output(13,GPIO.LOW)   #Input Pin for PhotoDiode
         ############################################################################
 
         #Run a trial and insert withdrawal time into a list for exporting
@@ -112,7 +112,7 @@ class animal:
     
         #Check if the laser timed out
         if (t_1==-10):
-            error_msg=messagebox.showerror("Time Out","Error: No reaction detected within 10 Seconds")
+            messagebox.showerror("Time Out","Error: No reaction detected within 10 Seconds")
             valid_trial=False
         #If a value was returned, ask if this is a valid trial
         else:
@@ -150,10 +150,15 @@ class animal:
         #--------------------------------------------------------------       
         #t_0=time()
         #while time()<t_0+10:
-        #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
-        #    t_1=time()
+        #    t_1=None #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
+        #    placed_label.config(text="Photodiode Status: Paw Placed")
+
         #print("\tPaw Placed time: %s seconds" % t_1)
-        #return t_1-t_0
+        #If the timer timed out, then set t_1 to go to the error message
+        #if((time()>t_0+time_out) and (bool(t_1) is False)):
+        #        t_1=-10
+        #        placed_label.config(text="Photodiode Status: Timed Out Error")
+        #return t_1
         #--------------------------------------------------------------
         
         #Check if the photo diode is not covered, when it is covered, turn on the laser
@@ -169,7 +174,7 @@ class animal:
 
         #Check if the paw is removed and the photo diode becomes uncovered, if so turn off the laser
         #If nothing happens within 10 seconds, turn off the laser and break from the loop
-        while True and time()<t_0+time_out:
+        while (True) and (time()<t_0+time_out):
             if GPIO.input(11)==0:   #check if the photodiode is covered
                 placed=True
             else:                   #check if the photodiode is uncovered
@@ -184,6 +189,7 @@ class animal:
         #If the timer timed out, then set t_1 to go to the error message
         if((time()>t_0+time_out) and (bool(t_1) is False)):
                 t_1=-10
+                placed_label.config(text="Photodiode Status: Timed Out Error")
         #Update GUI Label
         placed_label.config(text="Photodiode Status: Paw Removed Laser off")
         

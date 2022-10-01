@@ -4,8 +4,8 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    4/5/2022
-## Version: 2.5
+## Date:    10/1/2022
+## Version: 3.1
 ##
 ## Description:
 ##  This python file contains the class functions to create an animal data type, obtain data, and analyze the

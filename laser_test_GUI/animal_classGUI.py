@@ -4,8 +4,8 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    4/5/2022
-## Version: 2.5
+## Date:    10/12/2022
+## Version: 3.2
 ##
 ## Description:
 ##  This python file contains the class functions to create an animal data type, obtain data, and analyze the
@@ -141,21 +141,15 @@ class animal:
         GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
         GPIO.setup(13,GPIO.OUT) #Output to the Laser
         GPIO.output(13,GPIO.LOW) #Initialize to off
+        #--------------------------------------------------------------
+        #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
+        #return t_1
+        #--------------------------------------------------------------
     
-        #print("\tProgram Started")
+        #Create variables to keep track of initial state of photodiode and maximum safety time before a time out occurs
         placed_label.config(text="Photodiode Status: Searching for Paw")
         first_placed=False
         time_out=10
-        #print("Searching for Paw")
-        #--------------------------------------------------------------
-        
-        #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
-        
-        #print("\tPaw Placed time: %s seconds" % t_1)
-
-
-        #return t_1
-        #--------------------------------------------------------------
         #Check if the photo diode is not covered, when it is covered, turn on the laser
         while first_placed is False:
             GPIO.output(13,GPIO.LOW)
@@ -163,13 +157,14 @@ class animal:
                 first_placed=True
                 GPIO.output(13,GPIO.HIGH) #Turn on the Laser
                 break
+        #Get initial time stamp and update the photo diode status
         t_0=time()
         placed_label.config(text="Photodiode Status: Paw Placed Laser On")
         
         #Check if the paw is removed and the photo diode becomes uncovered, if so turn off the laser
         #If nothing happens within 10 seconds, turn off the laser and break from the loop
         while (True):
-            #Priority logic, exit if exceeds 10sec
+            #Priority logic, exit if exceeds 10seconds without any response
             if(time()>t_0+time_out):
                 t_1=-10
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
@@ -179,14 +174,17 @@ class animal:
                 placed=True
             else:
                 placed=False
-                GPIO.output(13,0)
+                GPIO.output(13,0)   #Turn off the laser
             #If the paw was placed and removed from laser, record change in time
             if first_placed is True and placed is False:
                 t_1=time()-t_0
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
                 break
+        #Update the photodiode status label
         placed_label.config(text="Photodiode Status: Paw Placed Laser Off")
         
-        GPIO.output(13,GPIO.LOW)    #Possibly could comment out
-        GPIO.cleanup()              #Could possibly comment out
+        #Strange issues happening with the laser not always obeying the GPIO.Low, thus why we put extra lines to insure it is low
+        #Issue could be because of GUI's structure using callback functions 
+        GPIO.output(13,GPIO.LOW)
+        GPIO.cleanup()              
         return t_1

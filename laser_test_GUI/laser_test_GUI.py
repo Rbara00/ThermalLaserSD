@@ -6,7 +6,7 @@
 ## 
 ## Author: Robert Bara
 ## Date:    9/6/2022
-## Version: 1.2
+## Version: 2.5
 ##
 ## Description:
 ##  This python file performs a thermal laser test for a medium sized animal such as a cat,

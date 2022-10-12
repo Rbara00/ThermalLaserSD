@@ -5,7 +5,7 @@
 ## 
 ## Author: Robert Bara
 ## Date:    9/6/2022
-## Version: 1.0
+## Version: 2.0
 ##
 ## Description:
 ##  This python file is responsible for taking data from the laser test and exporting it to excel. Additionally,

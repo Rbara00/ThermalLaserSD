@@ -163,7 +163,7 @@ style.theme_create( "MyStyle", parent="alt", settings={
 
 style.theme_use("MyStyle")
 
-#Setup GPIO Board for RPI, laser should be off 
+#Setup GPIO Board for RPI, insuring that the laser is off as soon as the python script begins 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(13,GPIO.OUT)
 GPIO.output(13,GPIO.LOW)

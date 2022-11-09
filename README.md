@@ -16,3 +16,6 @@ There are two versions of the program, one containing a GUI under the "GUI" fold
 or a no GUI, terminal-based version of the program under the "noGUI" folder, ran by
     Python3 laser_test.py       or      ./laser_test.py
 
+Additionally, Solidworks Files are uploaded incase the Lens is damaged or should be modified, as well as the lid for the enclosure.
+
+Final Paper will be uploaded upon completion to act as manual for the system.

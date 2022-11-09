@@ -4,8 +4,8 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    10/12/2022
-## Version: 3.2
+## Date:    11/9/2022
+## Version: 3.0
 ##
 ## Description:
 ##  This python file contains the class functions to create an animal data type, obtain data, and analyze the
@@ -93,8 +93,10 @@ class animal:
         ############################################################################
         #Setup GPIO Board for RPI
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(13,GPIO.OUT)
-        GPIO.output(13,GPIO.LOW)
+        GPIO.setup(13,GPIO.OUT) #output for laser
+        GPIO.setup(15,GPIO.OUT) #output for LED
+        GPIO.output(13,GPIO.LOW) #initialize laser off
+        GPIO.output(15,GPIO.LOW) #initialize LED off      
         ############################################################################
 
         #Run a trial and insert withdrawal time into a list for exporting
@@ -103,8 +105,10 @@ class animal:
         ############################################################################
         #Clear the GPIO Pins, overide laser to be off
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(13,GPIO.OUT)
-        GPIO.output(13,GPIO.LOW)
+        GPIO.setup(13,GPIO.OUT) #output for laser
+        GPIO.setup(15,GPIO.OUT) #output for LED
+        GPIO.output(13,GPIO.LOW) #initialize laser off
+        GPIO.output(15,GPIO.LOW) #initialize LED off  
         ############################################################################
 
         t_1=float(t_1) #Ensure the time is a valid time with decimals
@@ -140,51 +144,58 @@ class animal:
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(11,GPIO.IN)  #PhotoDiode Signal Pin
         GPIO.setup(13,GPIO.OUT) #Output to the Laser
-        GPIO.output(13,GPIO.LOW) #Initialize to off
+        GPIO.setup(15,GPIO.OUT) #Output to the LED
+        GPIO.output(13,GPIO.LOW) #Initialize Laser to off
+        GPIO.output(15,GPIO.LOW) #Initialize LED to off
+        
+        #Set up label, initialize photodiode reading to off, set timeout to be 10seconds
+        placed_label.config(text="Photodiode Status: Searching for Paw")
+        first_placed=False
+        time_out=10
+        
         #--------------------------------------------------------------
         #t_1=input("") #REMOVE THIS LINE IN FUTURE THIS IS JUST FOR PROGRAMMING AT HOME
         #return t_1
         #--------------------------------------------------------------
-    
-        #Create variables to keep track of initial state of photodiode and maximum safety time before a time out occurs
-        placed_label.config(text="Photodiode Status: Searching for Paw")
-        first_placed=False
-        time_out=10
         #Check if the photo diode is not covered, when it is covered, turn on the laser
         while first_placed is False:
             GPIO.output(13,GPIO.LOW)
             if GPIO.input(11)==0:
                 first_placed=True
                 GPIO.output(13,GPIO.HIGH) #Turn on the Laser
+                GPIO.output(15,GPIO.HIGH) #Turn on the LED
                 break
-        #Get initial time stamp and update the photo diode status
-        t_0=time()
+        #Get initial start time, update label
+        t_0=time()     
         placed_label.config(text="Photodiode Status: Paw Placed Laser On")
         
         #Check if the paw is removed and the photo diode becomes uncovered, if so turn off the laser
         #If nothing happens within 10 seconds, turn off the laser and break from the loop
         while (True):
-            #Priority logic, exit if exceeds 10seconds without any response
+            #Priority logic, exit if exceeds 10sec
             if(time()>t_0+time_out):
                 t_1=-10
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
+                GPIO.output(15,GPIO.LOW) #Turn off the LED
                 break
             #Check if the paw is removed
             if GPIO.input(11)==0:
                 placed=True
             else:
                 placed=False
-                GPIO.output(13,0)   #Turn off the laser
+                GPIO.output(13,0) #turn off the laser
+                GPIO.output(15,0) #turn off the LED
             #If the paw was placed and removed from laser, record change in time
             if first_placed is True and placed is False:
                 t_1=time()-t_0
                 GPIO.output(13,GPIO.LOW) #Turn off the laser
+                GPIO.output(15,GPIO.LOW) #Turn off the LED
                 break
-        #Update the photodiode status label
+        #Update label
         placed_label.config(text="Photodiode Status: Paw Placed Laser Off")
         
-        #Strange issues happening with the laser not always obeying the GPIO.Low, thus why we put extra lines to insure it is low
-        #Issue could be because of GUI's structure using callback functions 
-        GPIO.output(13,GPIO.LOW)
+        #Turn off laser and LED before exiting function and returning withdrawal time
+        GPIO.output(13,GPIO.LOW)    
+        GPIO.output(15,GPIO.LOW)
         GPIO.cleanup()              
         return t_1

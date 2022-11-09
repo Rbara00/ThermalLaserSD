@@ -5,8 +5,8 @@
 ## SD Team 10: Robert Bara, Zari Grandy, Ezra Galapo, Tyiana Smith
 ## 
 ## Author: Robert Bara
-## Date:    9/6/2022
-## Version: 2.5
+## Date:    11/9/2022
+## Version: 2.0
 ##
 ## Description:
 ##  This python file performs a thermal laser test for a medium sized animal such as a cat,
@@ -78,7 +78,7 @@ def promptAnimalInfo():
 def startExperiment():
     global curr_animal
     #Begin Testing a animal
-    curr_animal.startTime=datetime.now().strftime("%H:%M:%S")  #get the timestamp when testing is beginning
+    curr_animal.startTime=datetime.now().strftime("%H:%M:%S")  #get the timestamp when testing for this animal is beginning
     
     #Starts and Stops the Laser based on Photodiode state
     curr_animal.trial_gui(placed_label)                             
@@ -163,10 +163,12 @@ style.theme_create( "MyStyle", parent="alt", settings={
 
 style.theme_use("MyStyle")
 
-#Setup GPIO Board for RPI, insuring that the laser is off as soon as the python script begins 
+#Setup GPIO Board for RPI, laser and LED should be off 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(13,GPIO.OUT)
+GPIO.setup(15,GPIO.OUT)
 GPIO.output(13,GPIO.LOW)
+GPIO.output(15,GPIO.LOW)
 
 # setup frame 1 as start menu and frame 2 as test menu
 frame1=Frame(menus,width=800,height=500,bg="#7F7FFF")

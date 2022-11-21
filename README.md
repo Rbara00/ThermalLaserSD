@@ -18,4 +18,7 @@ or a no GUI, terminal-based version of the program under the "noGUI" folder, ran
 
 Additionally, Solidworks Files are uploaded incase the Lens is damaged or should be modified, as well as the lid for the enclosure.
 
+The Final Presentation for the goup may be found here, which contains thorough information about the design process as well as a video demonstration of the system at 18:10 
+https://www.youtube.com/watch?v=Gu6zqBxIRyg&feature=youtu.be
+
 Final Paper will be uploaded upon completion to act as manual for the system.
